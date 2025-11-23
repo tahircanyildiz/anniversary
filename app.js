@@ -183,9 +183,11 @@ async function loadTimeline() {
         const existingItems = timelineContainer.querySelectorAll('.timeline-item');
         existingItems.forEach(item => item.remove());
 
-        snapshot.forEach((doc, index) => {
+        let index = 0;
+        snapshot.forEach((doc) => {
             const data = doc.data();
             const item = createTimelineItem(data, index);
+            index++;
             timelineContainer.appendChild(item);
         });
 
@@ -342,9 +344,11 @@ async function loadReasons() {
         const existingItems = reasonsGrid.querySelectorAll('.flip-card');
         existingItems.forEach(item => item.remove());
 
-        snapshot.forEach((doc, index) => {
+        let index = 0;
+        snapshot.forEach((doc) => {
             const data = doc.data();
-            const card = createFlipCard(data, index + 1);
+            index++;
+            const card = createFlipCard(data, index);
             reasonsGrid.appendChild(card);
         });
 
