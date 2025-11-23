@@ -368,8 +368,7 @@ function createFlipCard(data, number) {
     card.innerHTML = `
         <div class="flip-card-inner">
             <div class="flip-card-front">
-                <span class="card-number">${number}</span>
-                <span class="card-label">Sebep #${number}</span>
+                <span class="card-number">${number}. Sebep</span>
                 <span class="tap-hint">Görmek için dokun</span>
             </div>
             <div class="flip-card-back">
