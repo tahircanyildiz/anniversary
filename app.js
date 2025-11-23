@@ -18,12 +18,20 @@ import {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Sayfa yenilendiğinde en başa git
+    window.scrollTo(0, 0);
+
     initScrollAnimations();
     initStartButton();
     initLightbox();
     initSecretSection();
     initMusicPlayer();
     loadAllData();
+});
+
+// Sayfa yenilenmeden önce scroll pozisyonunu sıfırla
+window.addEventListener('beforeunload', () => {
+    window.scrollTo(0, 0);
 });
 
 // ============================================
