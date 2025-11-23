@@ -741,8 +741,11 @@ async function saveStartDate() {
     }
 
     try {
+        // İstanbul saat diliminde gece 00:00 olarak kaydet (UTC+3)
+        const dateWithTimezone = new Date(startDate + 'T00:00:00+03:00');
+
         await setDoc(doc(db, 'settings', 'general'), {
-            startDate: new Date(startDate)
+            startDate: dateWithTimezone
         }, { merge: true });
 
         showToast('Başlangıç tarihi kaydedildi', 'success');

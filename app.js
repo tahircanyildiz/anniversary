@@ -96,16 +96,19 @@ async function loadAndStartCounter() {
             const data = settingsDoc.data();
             if (data.startDate) {
                 const startDate = data.startDate.toDate ? data.startDate.toDate() : new Date(data.startDate);
-                startCounter(startDate);
+                // İstanbul saat diliminde gece 00:00 olarak ayarla
+                const istanbulStart = new Date(startDate.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
+                istanbulStart.setHours(0, 0, 0, 0);
+                startCounter(istanbulStart);
             }
         } else {
             // Default start date if not set
-            startCounter(new Date('2023-01-01'));
+            startCounter(new Date('2023-01-01T00:00:00+03:00'));
         }
     } catch (error) {
         console.error('Error loading start date:', error);
         // Use default date on error
-        startCounter(new Date('2023-01-01'));
+        startCounter(new Date('2023-01-01T00:00:00+03:00'));
     }
 }
 
