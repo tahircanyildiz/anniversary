@@ -1,0 +1,14 @@
+{
+  "name": "anniversary-experience",
+  "version": "1.0.0",
+  "description": "Premium Anniversary Experience - A romantic web application",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

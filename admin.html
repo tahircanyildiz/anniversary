@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yönetim Paneli | Yıldönümü</title>
+
+    <!-- Preconnect for fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+</head>
+<body class="admin-body">
+    <!-- ============================================
+         LOADING OVERLAY
+         ============================================ -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Yükleniyor...</p>
+    </div>
+
+    <!-- ============================================
+         LOGIN CONTAINER
+         ============================================ -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>Yönetim Paneli</h1>
+                <p>Yıldönümü sayfanı yönetmek için giriş yap</p>
+            </div>
+            <div class="login-error" id="loginError"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">E-posta</label>
+                    <input type="email" id="email" placeholder="ornek@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Şifre</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-full" id="loginBtn">
+                    Giriş Yap
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================
+         ADMIN CONTAINER
+         ============================================ -->
+    <div class="admin-container" id="adminContainer">
+        <!-- Admin Header -->
+        <header class="admin-header">
+            <div class="admin-logo">
+                Yıldönümü <span>Yönetim</span>
+            </div>
+            <div class="admin-user">
+                <span id="userEmail">admin@example.com</span>
+                <button class="btn btn-small btn-outline" id="logoutBtn">Çıkış Yap</button>
+            </div>
+        </header>
+
+        <!-- Admin Navigation -->
+        <nav class="admin-nav">
+            <button class="nav-tab active" data-tab="timeline">Zaman Çizelgesi</button>
+            <button class="nav-tab" data-tab="gallery">Galeri</button>
+            <button class="nav-tab" data-tab="reasons">Sebepler</button>
+            <button class="nav-tab" data-tab="settings">Ayarlar</button>
+        </nav>
+
+        <!-- Admin Content -->
+        <main class="admin-content">
+            <!-- ============================================
+                 TIMELINE TAB
+                 ============================================ -->
+            <div class="tab-panel active" id="timeline-panel">
+                <div class="panel-header">
+                    <h2>Zaman Çizelgesi</h2>
+                    <button class="btn" id="addTimelineBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Anı Ekle
+                    </button>
+                </div>
+                <div class="items-list" id="timelineList">
+                    <!-- Timeline items will be loaded here -->
+                </div>
+            </div>
+
+            <!-- ============================================
+                 GALLERY TAB
+                 ============================================ -->
+            <div class="tab-panel" id="gallery-panel">
+                <div class="panel-header">
+                    <h2>Fotoğraf Galerisi</h2>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Yeni Fotoğraf Yükle</h3>
+                    <div class="upload-area" id="uploadArea">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <p>Fotoğraf yüklemek için tıkla veya sürükle bırak</p>
+                        <span>JPG, PNG, GIF desteklenir (Maks. 10MB)</span>
+                        <input type="file" id="fileInput" accept="image/*" multiple>
+                    </div>
+                    <div id="uploadProgress" style="margin-top: 1rem; display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="uploadProgressFill"></div>
+                        </div>
+                        <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: 0.5rem;" id="uploadStatus">Yükleniyor...</p>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Yüklenen Fotoğraflar</h3>
+                    <div class="gallery-admin-grid" id="galleryAdminGrid">
+                        <!-- Gallery items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================
+                 REASONS TAB
+                 ============================================ -->
+            <div class="tab-panel" id="reasons-panel">
+                <div class="panel-header">
+                    <h2>Neden Sen? Sebepleri</h2>
+                    <button class="btn" id="addReasonBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Sebep Ekle
+                    </button>
+                </div>
+                <div class="reasons-admin-grid" id="reasonsList">
+                    <!-- Reason items will be loaded here -->
+                </div>
+            </div>
+
+            <!-- ============================================
+                 SETTINGS TAB
+                 ============================================ -->
+            <div class="tab-panel" id="settings-panel">
+                <div class="panel-header">
+                    <h2>Ayarlar</h2>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Sayaç Başlangıç Tarihi</h3>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+                        İlişkinizin başladığı tarihi ayarlayın. Bu tarih canlı sayaç için kullanılacak.
+                    </p>
+                    <div class="form-group">
+                        <label for="startDate">Başlangıç Tarihi</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <button class="btn" id="saveStartDate">Tarihi Kaydet</button>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Spotify Şarkısı</h3>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+                        Ana sayfada çalacak Spotify şarkısını ayarlayın. Spotify'dan şarkı, albüm veya playlist linki yapıştırın.
+                    </p>
+                    <div class="form-group">
+                        <label for="spotifyUrl">Spotify Linki</label>
+                        <input type="url" id="spotifyUrl" placeholder="https://open.spotify.com/track/...">
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1rem;">
+                        Örnek: https://open.spotify.com/track/4iV5W9uYEdYUVa79Axb7Rh
+                    </p>
+                    <button class="btn" id="saveMusicSettings">Spotify Linkini Kaydet</button>
+                </div>
+
+                <div class="admin-card">
+                    <h3>Gizli Mektup</h3>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+                        Gizli aşk mektubunu yaz. Kullanıcı butonu 3 saniye basılı tuttuğunda bu mektup görünecek.
+                    </p>
+                    <div class="form-group">
+                        <label for="secretLetter">Mektup İçeriği</label>
+                        <textarea id="secretLetter" rows="10" placeholder="Kalbindekini yaz..."></textarea>
+                    </div>
+                    <button class="btn" id="saveSecretLetter">Mektubu Kaydet</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ============================================
+         MODALS
+         ============================================ -->
+
+    <!-- Timeline Modal -->
+    <div class="modal" id="timelineModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="timelineModalTitle">Yeni Anı Ekle</h3>
+                <button class="modal-close" id="timelineModalClose">&times;</button>
+            </div>
+            <form id="timelineForm">
+                <input type="hidden" id="timelineId">
+                <div class="form-group">
+                    <label for="eventDate">Tarih</label>
+                    <input type="date" id="eventDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="eventTitle">Başlık</label>
+                    <input type="text" id="eventTitle" placeholder="İlk Buluşmamız" required>
+                </div>
+                <div class="form-group">
+                    <label for="eventDescription">Açıklama</label>
+                    <textarea id="eventDescription" rows="4" placeholder="Bu özel anı anlat..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="cancelTimeline">İptal</button>
+                    <button type="submit" class="btn">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reason Modal -->
+    <div class="modal" id="reasonModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="reasonModalTitle">Yeni Sebep Ekle</h3>
+                <button class="modal-close" id="reasonModalClose">&times;</button>
+            </div>
+            <form id="reasonForm">
+                <input type="hidden" id="reasonId">
+                <div class="form-group">
+                    <label for="reasonOrder">Sıra Numarası</label>
+                    <input type="number" id="reasonOrder" min="1" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="reasonText">Sebep Metni</label>
+                    <textarea id="reasonText" rows="4" placeholder="Çünkü yanında kendimi güvende hissediyorum..." required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="cancelReason">İptal</button>
+                    <button type="submit" class="btn">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Silmeyi Onayla</h3>
+                <button class="modal-close" id="deleteModalClose">&times;</button>
+            </div>
+            <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+                Bu öğeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+            </p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" id="cancelDelete">İptal</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Sil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Admin Script -->
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
