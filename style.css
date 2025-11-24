@@ -1,7 +1,103 @@
-/* ============================================
-   PREMIUM ANNIVERSARY EXPERIENCE
-   Dark Mode | Immersive | Romantic
-   ============================================ */
+
+#countdownOverlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.countdown-content {
+    text-align: center;
+    max-width: 600px;
+}
+
+.countdown-heart {
+    font-size: 4rem;
+    margin-bottom: 2rem;
+    animation: heartPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes heartPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.countdown-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    font-weight: 400;
+    color: #ffffff;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+}
+
+.countdown-subtitle {
+    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+    color: #a0a0a0;
+    margin-bottom: 3rem;
+    line-height: 1.6;
+}
+
+.countdown-timer {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+}
+
+.countdown-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(201, 168, 124, 0.1);
+    border: 1px solid rgba(201, 168, 124, 0.3);
+    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    min-width: 80px;
+}
+
+.countdown-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(2rem, 6vw, 3rem);
+    font-weight: 300;
+    color: #c9a87c;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.countdown-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #666666;
+}
+
+.countdown-message {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.25rem;
+    font-style: italic;
+    color: #c9a87c;
+}
+
+@media (max-width: 480px) {
+    .countdown-item {
+        min-width: 70px;
+        padding: 1rem 0.75rem;
+    }
+
+    .countdown-timer {
+        gap: 0.5rem;
+    }
+
+    .countdown-heart {
+        font-size: 3rem;
+    }
+}
 
 /* CSS Variables */
 :root {

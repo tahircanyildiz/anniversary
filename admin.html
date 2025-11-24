@@ -63,6 +63,14 @@
                 Yıldönümü <span>Yönetim</span>
             </div>
             <div class="admin-user">
+                <a href="/" class="btn btn-small" target="_blank" style="text-decoration: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                        <polyline points="15 3 21 3 21 9"/>
+                        <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                    Siteyi Gör
+                </a>
                 <span id="userEmail">admin@example.com</span>
                 <button class="btn btn-small btn-outline" id="logoutBtn">Çıkış Yap</button>
             </div>
@@ -169,6 +177,22 @@
             <div class="tab-panel" id="settings-panel">
                 <div class="panel-header">
                     <h2>Ayarlar</h2>
+                </div>
+
+                <div class="admin-card">
+                    <h3>🔒 Geri Sayım (Lansman Tarihi)</h3>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem;">
+                        Bu tarihe kadar ziyaretçiler siteyi göremez, sadece geri sayım görürler. Sen admin olarak her zaman görebilirsin.
+                    </p>
+                    <div class="form-group">
+                        <label for="launchDate">Lansman Tarihi ve Saati</label>
+                        <input type="datetime-local" id="launchDate">
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="btn" id="saveLaunchDate">Tarihi Kaydet</button>
+                        <button class="btn btn-outline" id="disableLaunchDate">Geri Sayımı Kapat</button>
+                    </div>
+                    <p id="launchDateStatus" style="color: var(--accent); font-size: 0.875rem; margin-top: 1rem;"></p>
                 </div>
 
                 <div class="admin-card">

@@ -945,10 +945,14 @@ function initSettingsManager() {
     const saveStartDateBtn = document.getElementById('saveStartDate');
     const saveMusicBtn = document.getElementById('saveMusicSettings');
     const saveLetterBtn = document.getElementById('saveSecretLetter');
+    const saveLaunchDateBtn = document.getElementById('saveLaunchDate');
+    const disableLaunchDateBtn = document.getElementById('disableLaunchDate');
 
     saveStartDateBtn?.addEventListener('click', saveStartDate);
     saveMusicBtn?.addEventListener('click', saveMusicSettings);
     saveLetterBtn?.addEventListener('click', saveSecretLetter);
+    saveLaunchDateBtn?.addEventListener('click', saveLaunchDate);
+    disableLaunchDateBtn?.addEventListener('click', disableLaunchDate);
 }
 
 async function loadSettings() {
@@ -957,6 +961,19 @@ async function loadSettings() {
 
         if (settingsDoc.exists()) {
             const data = settingsDoc.data();
+
+            // Launch date (geri sayım)
+            if (data.launchDate) {
+                const date = data.launchDate.toDate ? data.launchDate.toDate() : new Date(data.launchDate);
+                // datetime-local formatı: YYYY-MM-DDTHH:MM
+                const localDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+                    .toISOString()
+                    .slice(0, 16);
+                document.getElementById('launchDate').value = localDateTime;
+                updateLaunchDateStatus(date);
+            } else {
+                document.getElementById('launchDateStatus').textContent = 'Geri sayım kapalı - site herkese açık';
+            }
 
             // Start date
             if (data.startDate) {
@@ -973,6 +990,61 @@ async function loadSettings() {
 
     } catch (error) {
         console.error('Error loading settings:', error);
+    }
+}
+
+function updateLaunchDateStatus(date) {
+    const statusEl = document.getElementById('launchDateStatus');
+    const now = new Date();
+
+    if (date > now) {
+        const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+        statusEl.textContent = `Site ${date.toLocaleDateString('tr-TR', options)} tarihinde açılacak`;
+        statusEl.style.color = 'var(--accent)';
+    } else {
+        statusEl.textContent = 'Lansman tarihi geçti - site herkese açık';
+        statusEl.style.color = '#28a745';
+    }
+}
+
+async function saveLaunchDate() {
+    const launchDateInput = document.getElementById('launchDate').value;
+
+    if (!launchDateInput) {
+        showToast('Lütfen bir tarih ve saat seçin', 'error');
+        return;
+    }
+
+    try {
+        const launchDate = new Date(launchDateInput);
+
+        await setDoc(doc(db, 'settings', 'general'), {
+            launchDate: launchDate
+        }, { merge: true });
+
+        updateLaunchDateStatus(launchDate);
+        showToast('Lansman tarihi kaydedildi', 'success');
+
+    } catch (error) {
+        console.error('Error saving launch date:', error);
+        showToast('Tarih kaydedilirken hata oluştu', 'error');
+    }
+}
+
+async function disableLaunchDate() {
+    try {
+        await setDoc(doc(db, 'settings', 'general'), {
+            launchDate: null
+        }, { merge: true });
+
+        document.getElementById('launchDate').value = '';
+        document.getElementById('launchDateStatus').textContent = 'Geri sayım kapalı - site herkese açık';
+        document.getElementById('launchDateStatus').style.color = '#28a745';
+        showToast('Geri sayım kapatıldı', 'success');
+
+    } catch (error) {
+        console.error('Error disabling launch date:', error);
+        showToast('Ayar kaydedilirken hata oluştu', 'error');
     }
 }
 

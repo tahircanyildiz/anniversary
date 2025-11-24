@@ -5,13 +5,20 @@
 
 import {
     db,
+    auth,
     collection,
     doc,
     getDocs,
     getDoc,
     query,
-    orderBy
+    orderBy,
+    onAuthStateChanged
 } from './firebase-config.js';
+
+// ============================================
+// LAUNCH DATE CONFIG
+// ============================================
+let LAUNCH_DATE = null;
 
 // ============================================
 // INITIALIZATION
@@ -21,18 +28,126 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sayfa yenilendiğinde en başa git
     window.scrollTo(0, 0);
 
-    initScrollAnimations();
-    initStartButton();
-    initLightbox();
-    initSecretSection();
-    initMusicPlayer();
-    loadAllData();
+    // Geri sayım kontrolü
+    checkLaunchDate();
 });
 
 // Sayfa yenilenmeden önce scroll pozisyonunu sıfırla
 window.addEventListener('beforeunload', () => {
     window.scrollTo(0, 0);
 });
+
+async function checkLaunchDate() {
+    try {
+        // Firebase'den lansman tarihini al
+        const settingsDoc = await getDoc(doc(db, 'settings', 'general'));
+
+        if (settingsDoc.exists()) {
+            const data = settingsDoc.data();
+            if (data.launchDate) {
+                LAUNCH_DATE = data.launchDate.toDate ? data.launchDate.toDate() : new Date(data.launchDate);
+            }
+        }
+
+        const now = new Date();
+
+        // Eğer lansman tarihi yoksa veya geçtiyse, siteyi göster
+        if (!LAUNCH_DATE || now >= LAUNCH_DATE) {
+            showMainSite();
+            return;
+        }
+
+        // Admin girişi kontrolü
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Admin giriş yapmış, siteyi göster
+                showMainSite();
+            } else {
+                // Geri sayım göster
+                showCountdown();
+            }
+        });
+
+    } catch (error) {
+        console.error('Error checking launch date:', error);
+        // Hata durumunda siteyi göster
+        showMainSite();
+    }
+}
+
+function showMainSite() {
+    document.getElementById('countdownOverlay')?.remove();
+    document.body.style.overflow = '';
+
+    initScrollAnimations();
+    initStartButton();
+    initLightbox();
+    initSecretSection();
+    initMusicPlayer();
+    loadAllData();
+}
+
+function showCountdown() {
+    // Geri sayım overlay'i oluştur
+    const overlay = document.createElement('div');
+    overlay.id = 'countdownOverlay';
+    overlay.innerHTML = `
+        <div class="countdown-content">
+            <div class="countdown-heart">💝</div>
+            <h1 class="countdown-title">Özel Bir Sürpriz Hazırlanıyor...</h1>
+            <p class="countdown-subtitle">Sabırla bekle, çok yakında seninle paylaşacağım güzel şeyler var</p>
+
+            <div class="countdown-timer">
+                <div class="countdown-item">
+                    <span class="countdown-number" id="countdownDays">00</span>
+                    <span class="countdown-label">Gün</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="countdownHours">00</span>
+                    <span class="countdown-label">Saat</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="countdownMinutes">00</span>
+                    <span class="countdown-label">Dakika</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="countdownSeconds">00</span>
+                    <span class="countdown-label">Saniye</span>
+                </div>
+            </div>
+
+            <p class="countdown-message">Seni çok seviyorum ❤️</p>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+
+    // Geri sayımı başlat
+    updateCountdownTimer();
+    setInterval(updateCountdownTimer, 1000);
+}
+
+function updateCountdownTimer() {
+    const now = new Date();
+    const diff = LAUNCH_DATE - now;
+
+    if (diff <= 0) {
+        // Süre doldu, sayfayı yenile
+        location.reload();
+        return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    document.getElementById('countdownDays').textContent = days.toString().padStart(2, '0');
+    document.getElementById('countdownHours').textContent = hours.toString().padStart(2, '0');
+    document.getElementById('countdownMinutes').textContent = minutes.toString().padStart(2, '0');
+    document.getElementById('countdownSeconds').textContent = seconds.toString().padStart(2, '0');
+}
 
 // ============================================
 // SCROLL ANIMATIONS (IntersectionObserver)
