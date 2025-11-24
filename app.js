@@ -242,8 +242,8 @@ async function loadGallery() {
         const galleryGrid = document.getElementById('galleryGrid');
         const emptyState = document.getElementById('galleryEmpty');
 
-        const q = query(collection(db, 'gallery'), orderBy('order', 'asc'));
-        const snapshot = await getDocs(q);
+        // Tüm fotoğrafları çek
+        const snapshot = await getDocs(collection(db, 'gallery'));
 
         if (snapshot.empty) {
             emptyState.style.display = 'block';
@@ -256,9 +256,15 @@ async function loadGallery() {
         const existingItems = galleryGrid.querySelectorAll('.gallery-item');
         existingItems.forEach(item => item.remove());
 
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const item = createGalleryItem(data);
+        // Order'a göre sırala
+        const docs = [];
+        snapshot.forEach((docSnapshot) => {
+            docs.push({ id: docSnapshot.id, data: docSnapshot.data() });
+        });
+        docs.sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
+
+        docs.forEach((docItem) => {
+            const item = createGalleryItem(docItem.data);
             galleryGrid.appendChild(item);
         });
 

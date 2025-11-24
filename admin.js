@@ -369,9 +369,15 @@ async function deleteTimelineEvent(id) {
 // GALLERY MANAGER (CLOUDINARY)
 // ============================================
 
+let selectMode = false;
+let selectedPhotos = new Set();
+
 function initGalleryManager() {
     const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('fileInput');
+    const toggleSelectModeBtn = document.getElementById('toggleSelectModeBtn');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
 
     uploadArea?.addEventListener('click', () => fileInput.click());
 
@@ -394,6 +400,84 @@ function initGalleryManager() {
     fileInput?.addEventListener('change', (e) => {
         handleFileUpload(e.target.files);
     });
+
+    // Seçim modu toggle
+    toggleSelectModeBtn?.addEventListener('click', () => {
+        selectMode = !selectMode;
+        updateSelectModeUI();
+    });
+
+    // Toplu silme
+    bulkDeleteBtn?.addEventListener('click', () => {
+        if (selectedPhotos.size === 0) {
+            showToast('Önce fotoğraf seçin', 'error');
+            return;
+        }
+        confirmDelete(() => bulkDeletePhotos());
+    });
+
+    // Seçimi iptal et
+    cancelSelectionBtn?.addEventListener('click', () => {
+        selectMode = false;
+        selectedPhotos.clear();
+        updateSelectModeUI();
+        loadGallery();
+    });
+}
+
+function updateSelectModeUI() {
+    const galleryActions = document.getElementById('galleryActions');
+    const toggleBtn = document.getElementById('toggleSelectModeBtn');
+    const grid = document.getElementById('galleryAdminGrid');
+
+    if (selectMode) {
+        galleryActions.style.display = 'flex';
+        toggleBtn.style.display = 'none';
+        grid.classList.add('select-mode');
+    } else {
+        galleryActions.style.display = 'none';
+        toggleBtn.style.display = 'inline-flex';
+        grid.classList.remove('select-mode');
+        selectedPhotos.clear();
+    }
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const countEl = document.getElementById('selectedCount');
+    if (countEl) {
+        countEl.textContent = `${selectedPhotos.size} seçildi`;
+    }
+}
+
+function togglePhotoSelection(id, element) {
+    if (selectedPhotos.has(id)) {
+        selectedPhotos.delete(id);
+        element.classList.remove('selected');
+    } else {
+        selectedPhotos.add(id);
+        element.classList.add('selected');
+    }
+    updateSelectedCount();
+}
+
+async function bulkDeletePhotos() {
+    try {
+        const deletePromises = [];
+        for (const id of selectedPhotos) {
+            deletePromises.push(deleteDoc(doc(db, 'gallery', id)));
+        }
+        await Promise.all(deletePromises);
+
+        showToast(`${selectedPhotos.size} fotoğraf silindi`, 'success');
+        selectedPhotos.clear();
+        selectMode = false;
+        updateSelectModeUI();
+        loadGallery();
+    } catch (error) {
+        console.error('Error bulk deleting photos:', error);
+        showToast('Fotoğraflar silinirken hata oluştu', 'error');
+    }
 }
 
 async function loadGallery() {
@@ -401,8 +485,8 @@ async function loadGallery() {
         const grid = document.getElementById('galleryAdminGrid');
         grid.innerHTML = '<div class="spinner" style="margin: 2rem auto;"></div>';
 
-        const q = query(collection(db, 'gallery'), orderBy('order', 'asc'));
-        const snapshot = await getDocs(q);
+        // Tüm fotoğrafları çek
+        const snapshot = await getDocs(collection(db, 'gallery'));
 
         if (snapshot.empty) {
             grid.innerHTML = `
@@ -418,11 +502,37 @@ async function loadGallery() {
             return;
         }
 
-        grid.innerHTML = '';
+        // Order alanı olmayanları düzelt ve sırala
+        const docs = [];
+        let needsUpdate = false;
 
         snapshot.forEach((docSnapshot) => {
             const data = docSnapshot.data();
-            const item = createGalleryAdminItem(docSnapshot.id, data);
+            docs.push({ id: docSnapshot.id, data: data });
+            if (data.order === undefined) {
+                needsUpdate = true;
+            }
+        });
+
+        // Order alanı olmayanlara ekle
+        if (needsUpdate) {
+            let orderIndex = 0;
+            for (const docItem of docs) {
+                if (docItem.data.order === undefined) {
+                    await updateDoc(doc(db, 'gallery', docItem.id), { order: orderIndex });
+                    docItem.data.order = orderIndex;
+                }
+                orderIndex++;
+            }
+        }
+
+        // Order'a göre sırala
+        docs.sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
+
+        grid.innerHTML = '';
+
+        docs.forEach((docItem) => {
+            const item = createGalleryAdminItem(docItem.id, docItem.data);
             grid.appendChild(item);
         });
 
@@ -438,7 +548,7 @@ async function loadGallery() {
 function createGalleryAdminItem(id, data) {
     const item = document.createElement('div');
     item.className = 'gallery-admin-item';
-    item.draggable = true;
+    item.draggable = !selectMode;
     item.dataset.id = id;
 
     item.innerHTML = `
@@ -452,15 +562,31 @@ function createGalleryAdminItem(id, data) {
                 <circle cx="15" cy="18" r="1.5"/>
             </svg>
         </div>
+        <div class="select-checkbox">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        </div>
         <img src="${data.url}" alt="${data.caption || 'Fotoğraf'}">
         <div class="delete-overlay">
             <button class="btn btn-small btn-danger">Sil</button>
         </div>
     `;
 
+    // Seçim modu için tıklama
+    item.addEventListener('click', (e) => {
+        if (selectMode && !e.target.closest('.btn-danger')) {
+            e.preventDefault();
+            e.stopPropagation();
+            togglePhotoSelection(id, item);
+        }
+    });
+
     item.querySelector('.btn-danger').addEventListener('click', (e) => {
         e.stopPropagation();
-        confirmDelete(() => deleteGalleryItem(id, data.publicId));
+        if (!selectMode) {
+            confirmDelete(() => deleteGalleryItem(id, data.publicId));
+        }
     });
 
     return item;

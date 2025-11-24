@@ -1420,6 +1420,67 @@ h1, h2, h3, h4, h5, h6 {
     opacity: 1;
 }
 
+/* Gallery Select Mode */
+.gallery-admin-item .select-checkbox {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid white;
+    border-radius: 50%;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 3;
+    transition: all 0.2s ease;
+}
+
+.gallery-admin-item .select-checkbox svg {
+    width: 16px;
+    height: 16px;
+    stroke: white;
+    opacity: 0;
+}
+
+.gallery-admin-grid.select-mode .gallery-admin-item {
+    cursor: pointer;
+}
+
+.gallery-admin-grid.select-mode .gallery-admin-item .select-checkbox {
+    display: flex;
+}
+
+.gallery-admin-grid.select-mode .gallery-admin-item .drag-handle {
+    display: none;
+}
+
+.gallery-admin-grid.select-mode .gallery-admin-item .delete-overlay {
+    display: none;
+}
+
+.gallery-admin-item.selected .select-checkbox {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.gallery-admin-item.selected .select-checkbox svg {
+    opacity: 1;
+}
+
+.gallery-admin-item.selected {
+    outline: 3px solid var(--accent);
+    outline-offset: -3px;
+}
+
+/* Gallery Actions */
+.gallery-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 /* Upload Area */
 .upload-area {
     border: 2px dashed var(--border-color);
