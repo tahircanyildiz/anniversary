@@ -88,40 +88,43 @@ function showMainSite() {
 }
 
 function showCountdown() {
-    // Geri sayım overlay'i oluştur
-    const overlay = document.createElement('div');
-    overlay.id = 'countdownOverlay';
-    overlay.innerHTML = `
-        <div class="countdown-content">
-            <div class="countdown-heart">💝</div>
-            <h1 class="countdown-title">Özel Bir Sürpriz Hazırlanıyor...</h1>
-            <p class="countdown-subtitle">Sabırla bekle, çok yakında seninle paylaşacağım güzel şeyler var</p>
+    // Ana içeriği tamamen gizle
+    document.body.innerHTML = `
+        <div id="countdownOverlay">
+            <div class="countdown-content">
+                <div class="countdown-heart">💝</div>
+                <h1 class="countdown-title">Özel Bir Sürpriz Hazırlanıyor...</h1>
+                <p class="countdown-subtitle">Sabırla bekle, çok yakında seninle paylaşacağım güzel şeyler var</p>
 
-            <div class="countdown-timer">
-                <div class="countdown-item">
-                    <span class="countdown-number" id="countdownDays">00</span>
-                    <span class="countdown-label">Gün</span>
+                <div class="countdown-timer">
+                    <div class="countdown-item">
+                        <span class="countdown-number" id="countdownDays">00</span>
+                        <span class="countdown-label">Gün</span>
+                    </div>
+                    <div class="countdown-item">
+                        <span class="countdown-number" id="countdownHours">00</span>
+                        <span class="countdown-label">Saat</span>
+                    </div>
+                    <div class="countdown-item">
+                        <span class="countdown-number" id="countdownMinutes">00</span>
+                        <span class="countdown-label">Dakika</span>
+                    </div>
+                    <div class="countdown-item">
+                        <span class="countdown-number" id="countdownSeconds">00</span>
+                        <span class="countdown-label">Saniye</span>
+                    </div>
                 </div>
-                <div class="countdown-item">
-                    <span class="countdown-number" id="countdownHours">00</span>
-                    <span class="countdown-label">Saat</span>
-                </div>
-                <div class="countdown-item">
-                    <span class="countdown-number" id="countdownMinutes">00</span>
-                    <span class="countdown-label">Dakika</span>
-                </div>
-                <div class="countdown-item">
-                    <span class="countdown-number" id="countdownSeconds">00</span>
-                    <span class="countdown-label">Saniye</span>
-                </div>
+
+                <p class="countdown-message">Seni çok seviyorum ❤️</p>
             </div>
-
-            <p class="countdown-message">Seni çok seviyorum ❤️</p>
         </div>
     `;
 
-    document.body.appendChild(overlay);
+    // Scroll'u tamamen engelle
     document.body.style.overflow = 'hidden';
+    document.body.style.height = '100vh';
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.height = '100vh';
 
     // Geri sayımı başlat
     updateCountdownTimer();
