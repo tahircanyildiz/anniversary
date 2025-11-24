@@ -242,7 +242,7 @@ async function loadGallery() {
         const galleryGrid = document.getElementById('galleryGrid');
         const emptyState = document.getElementById('galleryEmpty');
 
-        const q = query(collection(db, 'gallery'), orderBy('uploadedAt', 'desc'));
+        const q = query(collection(db, 'gallery'), orderBy('order', 'asc'));
         const snapshot = await getDocs(q);
 
         if (snapshot.empty) {

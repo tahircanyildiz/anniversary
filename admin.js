@@ -401,7 +401,7 @@ async function loadGallery() {
         const grid = document.getElementById('galleryAdminGrid');
         grid.innerHTML = '<div class="spinner" style="margin: 2rem auto;"></div>';
 
-        const q = query(collection(db, 'gallery'), orderBy('uploadedAt', 'desc'));
+        const q = query(collection(db, 'gallery'), orderBy('order', 'asc'));
         const snapshot = await getDocs(q);
 
         if (snapshot.empty) {
@@ -426,6 +426,9 @@ async function loadGallery() {
             grid.appendChild(item);
         });
 
+        // Sürükle-bırak özelliğini başlat
+        initGalleryDragAndDrop();
+
     } catch (error) {
         console.error('Error loading gallery:', error);
         showToast('Galeri yüklenirken hata oluştu', 'error');
@@ -435,19 +438,119 @@ async function loadGallery() {
 function createGalleryAdminItem(id, data) {
     const item = document.createElement('div');
     item.className = 'gallery-admin-item';
+    item.draggable = true;
+    item.dataset.id = id;
 
     item.innerHTML = `
+        <div class="drag-handle">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                <circle cx="9" cy="6" r="1.5"/>
+                <circle cx="15" cy="6" r="1.5"/>
+                <circle cx="9" cy="12" r="1.5"/>
+                <circle cx="15" cy="12" r="1.5"/>
+                <circle cx="9" cy="18" r="1.5"/>
+                <circle cx="15" cy="18" r="1.5"/>
+            </svg>
+        </div>
         <img src="${data.url}" alt="${data.caption || 'Fotoğraf'}">
         <div class="delete-overlay">
             <button class="btn btn-small btn-danger">Sil</button>
         </div>
     `;
 
-    item.querySelector('.btn-danger').addEventListener('click', () => {
+    item.querySelector('.btn-danger').addEventListener('click', (e) => {
+        e.stopPropagation();
         confirmDelete(() => deleteGalleryItem(id, data.publicId));
     });
 
     return item;
+}
+
+// Sürükle-bırak fonksiyonları
+let draggedItem = null;
+
+function initGalleryDragAndDrop() {
+    const grid = document.getElementById('galleryAdminGrid');
+    const items = grid.querySelectorAll('.gallery-admin-item');
+
+    items.forEach(item => {
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragend', handleDragEnd);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('drop', handleDrop);
+        item.addEventListener('dragenter', handleDragEnter);
+        item.addEventListener('dragleave', handleDragLeave);
+    });
+}
+
+function handleDragStart(e) {
+    draggedItem = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    document.querySelectorAll('.gallery-admin-item').forEach(item => {
+        item.classList.remove('drag-over');
+    });
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    if (this !== draggedItem) {
+        this.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+async function handleDrop(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+
+    if (this === draggedItem) return;
+
+    const grid = document.getElementById('galleryAdminGrid');
+    const items = [...grid.querySelectorAll('.gallery-admin-item')];
+    const draggedIndex = items.indexOf(draggedItem);
+    const targetIndex = items.indexOf(this);
+
+    // DOM'da yer değiştir
+    if (draggedIndex < targetIndex) {
+        this.parentNode.insertBefore(draggedItem, this.nextSibling);
+    } else {
+        this.parentNode.insertBefore(draggedItem, this);
+    }
+
+    // Yeni sıralamayı kaydet
+    await saveGalleryOrder();
+}
+
+async function saveGalleryOrder() {
+    try {
+        const grid = document.getElementById('galleryAdminGrid');
+        const items = grid.querySelectorAll('.gallery-admin-item');
+
+        const updates = [];
+        items.forEach((item, index) => {
+            const id = item.dataset.id;
+            updates.push(updateDoc(doc(db, 'gallery', id), { order: index }));
+        });
+
+        await Promise.all(updates);
+        showToast('Sıralama kaydedildi', 'success');
+    } catch (error) {
+        console.error('Error saving order:', error);
+        showToast('Sıralama kaydedilirken hata oluştu', 'error');
+    }
 }
 
 // Cloudinary'e fotoğraf yükle
@@ -515,11 +618,19 @@ async function handleFileUpload(files) {
             // Cloudinary'e yükle
             const result = await uploadToCloudinary(file);
 
-            // Firestore'a kaydet
+            // Mevcut en yüksek order değerini bul
+            const gallerySnapshot = await getDocs(collection(db, 'gallery'));
+            const maxOrder = gallerySnapshot.docs.reduce((max, doc) => {
+                const order = doc.data().order || 0;
+                return order > max ? order : max;
+            }, -1);
+
+            // Firestore'a kaydet (sıralama ile)
             await addDoc(collection(db, 'gallery'), {
                 url: result.secure_url,
                 publicId: result.public_id,
                 caption: file.name,
+                order: maxOrder + 1,
                 uploadedAt: new Date()
             });
 
