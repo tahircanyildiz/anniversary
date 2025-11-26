@@ -509,8 +509,14 @@ function createFlipCard(data, number) {
         </div>
     `;
 
-    // Add click handler to flip
     card.addEventListener('click', () => {
+        const allCards = document.querySelectorAll('.flip-card.flipped');
+        allCards.forEach(otherCard => {
+            if (otherCard !== card) {
+                otherCard.classList.remove('flipped');
+            }
+        });
+
         card.classList.toggle('flipped');
     });
 
