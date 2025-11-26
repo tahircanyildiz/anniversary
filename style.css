@@ -570,7 +570,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .masonry-grid {
     display: flex;
-    gap: 1rem;
+    gap: 12px;
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -579,17 +579,7 @@ h1, h2, h3, h4, h5, h6 {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-}
-
-@media (min-width: 768px) {
-    .masonry-grid {
-        gap: 1.5rem;
-    }
-
-    .masonry-column {
-        gap: 1.5rem;
-    }
+    gap: 12px;
 }
 
 .gallery-item {

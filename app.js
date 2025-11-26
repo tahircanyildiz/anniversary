@@ -360,7 +360,6 @@ async function loadGallery() {
         const galleryGrid = document.getElementById('galleryGrid');
         const emptyState = document.getElementById('galleryEmpty');
 
-        // Tüm fotoğrafları çek
         const snapshot = await getDocs(collection(db, 'gallery'));
 
         if (snapshot.empty) {
@@ -369,43 +368,70 @@ async function loadGallery() {
         }
 
         emptyState.style.display = 'none';
-
-        // Clear existing items
         galleryGrid.innerHTML = '';
 
-        // Order'a göre sırala
         const docs = [];
         snapshot.forEach((docSnapshot) => {
             docs.push({ id: docSnapshot.id, data: docSnapshot.data() });
         });
         docs.sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
 
-        // Ekran genişliğine göre sütun sayısını belirle
         const columnCount = window.innerWidth >= 1024 ? 4 : window.innerWidth >= 768 ? 3 : 2;
-
-        // Sütunları oluştur
         const columns = [];
+        const columnHeights = [];
+
         for (let i = 0; i < columnCount; i++) {
-            const column = document.createElement('div');
-            column.className = 'masonry-column';
-            columns.push(column);
-            galleryGrid.appendChild(column);
+            const col = document.createElement('div');
+            col.className = 'masonry-column';
+            columns.push(col);
+            columnHeights.push(0);
+            galleryGrid.appendChild(col);
         }
 
-        // Fotoğrafları sütunlara dağıt (round-robin ile dengeli dağıtım)
-        docs.forEach((docItem, index) => {
-            const item = createGalleryItem(docItem.data);
-            const columnIndex = index % columnCount;
-            columns[columnIndex].appendChild(item);
-        });
+        let loadedCount = 0;
+        const totalImages = docs.length;
 
-        // Re-observe new gallery items
-        const newItems = galleryGrid.querySelectorAll('.gallery-item');
-        observeNewElements(newItems);
+        docs.forEach((docItem) => {
+            const item = createGalleryItem(docItem.data);
+            const img = item.querySelector('img');
+
+            const addToColumn = () => {
+                const shortestIndex = columnHeights.indexOf(Math.min(...columnHeights));
+                columns[shortestIndex].appendChild(item);
+
+                const imgHeight = img.naturalHeight || img.height || 300;
+                const imgWidth = img.naturalWidth || img.width || 300;
+                const containerWidth = columns[shortestIndex].offsetWidth || 300;
+                const scaledHeight = (imgHeight / imgWidth) * containerWidth;
+
+                columnHeights[shortestIndex] += scaledHeight + 12;
+
+                loadedCount++;
+                if (loadedCount === totalImages) {
+                    observeNewElements(galleryGrid.querySelectorAll('.gallery-item'));
+                    setTimeout(() => equalizeColumnHeights(columns, columnHeights), 100);
+                }
+            };
+
+            if (img.complete && img.naturalWidth) {
+                addToColumn();
+            } else {
+                img.addEventListener('load', addToColumn);
+                img.addEventListener('error', addToColumn);
+            }
+        });
 
     } catch (error) {
         console.error('Error loading gallery:', error);
     }
+}
+
+function equalizeColumnHeights(columns, heights) {
+    const minHeight = Math.min(...heights);
+    columns.forEach(col => {
+        col.style.maxHeight = `${minHeight}px`;
+        col.style.overflow = 'hidden';
+    });
 }
 
 function createGalleryItem(data) {
@@ -415,7 +441,6 @@ function createGalleryItem(data) {
     const img = document.createElement('img');
     img.src = data.url || '';
     img.alt = data.caption || 'Anı';
-    img.loading = 'lazy';
 
     // Add click handler for lightbox
     item.addEventListener('click', () => openLightbox(data.url));
@@ -743,15 +768,16 @@ async function loadAllData() {
 
     // Resize event listener for responsive gallery
     let resizeTimeout;
+    let lastColumnCount = window.innerWidth >= 1024 ? 4 : window.innerWidth >= 768 ? 3 : 2;
+
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            // Sadece ekran genişliği breakpoint'leri geçtiğinde galeriyi yeniden yükle
             const currentWidth = window.innerWidth;
             const newColumnCount = currentWidth >= 1024 ? 4 : currentWidth >= 768 ? 3 : 2;
-            const currentColumnCount = document.querySelectorAll('.masonry-column').length;
 
-            if (newColumnCount !== currentColumnCount) {
+            if (newColumnCount !== lastColumnCount) {
+                lastColumnCount = newColumnCount;
                 loadGallery();
             }
         }, 250);
