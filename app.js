@@ -370,9 +370,8 @@ async function loadGallery() {
 
         emptyState.style.display = 'none';
 
-        // Clear existing items except empty state
-        const existingItems = galleryGrid.querySelectorAll('.gallery-item');
-        existingItems.forEach(item => item.remove());
+        // Clear existing items
+        galleryGrid.innerHTML = '';
 
         // Order'a göre sırala
         const docs = [];
@@ -381,9 +380,23 @@ async function loadGallery() {
         });
         docs.sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
 
-        docs.forEach((docItem) => {
+        // Ekran genişliğine göre sütun sayısını belirle
+        const columnCount = window.innerWidth >= 1024 ? 4 : window.innerWidth >= 768 ? 3 : 2;
+
+        // Sütunları oluştur
+        const columns = [];
+        for (let i = 0; i < columnCount; i++) {
+            const column = document.createElement('div');
+            column.className = 'masonry-column';
+            columns.push(column);
+            galleryGrid.appendChild(column);
+        }
+
+        // Fotoğrafları sütunlara dağıt (round-robin ile dengeli dağıtım)
+        docs.forEach((docItem, index) => {
             const item = createGalleryItem(docItem.data);
-            galleryGrid.appendChild(item);
+            const columnIndex = index % columnCount;
+            columns[columnIndex].appendChild(item);
         });
 
         // Re-observe new gallery items
@@ -727,6 +740,22 @@ async function loadAllData() {
         loadReasons(),
         loadSpotifyEmbed()
     ]);
+
+    // Resize event listener for responsive gallery
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            // Sadece ekran genişliği breakpoint'leri geçtiğinde galeriyi yeniden yükle
+            const currentWidth = window.innerWidth;
+            const newColumnCount = currentWidth >= 1024 ? 4 : currentWidth >= 768 ? 3 : 2;
+            const currentColumnCount = document.querySelectorAll('.masonry-column').length;
+
+            if (newColumnCount !== currentColumnCount) {
+                loadGallery();
+            }
+        }, 250);
+    });
 }
 
 // ============================================
